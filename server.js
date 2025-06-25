@@ -8,11 +8,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ⚠️ IMPORTANTE: CORS debe ir después de crear `app`, y configurado correctamente
+// ✅ CORS seguro y estricto para tu dominio gratuito de Wix
 const corsOptions = {
   origin: 'https://nkmsistemas.wixsite.com',
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
+  methods: ['POST'],
+  allowedHeaders: ['Content-Type'],
+  credentials: false
 };
 
 app.use(cors(corsOptions));
