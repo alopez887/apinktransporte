@@ -56,6 +56,28 @@ app.get('/hoteles', async (req, res) => {
   }
 });
 
+// 🔹 Ruta para obtener capacidades según tipo y zona
+app.get('/capacidades', async (req, res) => {
+  const { tipo, zona } = req.query;
+
+  if (!tipo || !zona) {
+    return res.status(400).json({ error: 'Faltan parámetros tipo y zona' });
+  }
+
+  try {
+    const resultado = await pool.query(
+      'SELECT capacidad FROM tarifas_transportacion WHERE tipo_transporte = $1 AND zona = $2 ORDER BY capacidad',
+      [tipo, zona]
+    );
+
+    const capacidades = resultado.rows.map(row => row.capacidad);
+    res.json(capacidades);
+  } catch (error) {
+    console.error('❌ Error al obtener capacidades:', error.message);
+    res.status(500).json({ error: 'Error interno al obtener capacidades' });
+  }
+});
+
 // 🔹 Ruta para guardar redondo
 app.post('/guardar-redondo', guardarRedondo);
 
