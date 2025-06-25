@@ -8,25 +8,44 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// ✅ CORS configurado para Wix y archivos HTML embebidos (iframe)
 const corsOptions = {
-  origin: 'https://nkmsistemas.wixsite.com',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://nkmsistemas.wixsite.com',
+      'https://nkmsistemas-wixsite-com.filesusr.com'
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('❌ No autorizado por CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 };
 
-// CORS oficial + refuerzo
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// ✅ Refuerzo manual para CORS (por si Railway cachea mal)
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://nkmsistemas.wixsite.com");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
+  const origin = req.headers.origin;
+  const allowed = [
+    'https://nkmsistemas.wixsite.com',
+    'https://nkmsistemas-wixsite-com.filesusr.com'
+  ];
+  if (allowed.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
 
 app.use(express.json());
 
-// Ruta para hoteles
+// 🔹 Ruta para hoteles
 app.get('/hoteles', async (req, res) => {
   try {
     const resultado = await pool.query('SELECT nombre_hotel FROM hoteles_zona ORDER BY nombre_hotel');
@@ -37,9 +56,10 @@ app.get('/hoteles', async (req, res) => {
   }
 });
 
-// Ruta para guardar redondo
+// 🔹 Ruta para guardar redondo
 app.post('/guardar-redondo', guardarRedondo);
 
+// 🔹 Iniciar servidor
 app.listen(PORT, () => {
   console.log(`✅ API de reservaciones redondo activa en el puerto ${PORT}`);
 });
