@@ -8,20 +8,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ CORS seguro y estricto para tu dominio gratuito de Wix
+// ✅ CORS SEGURO para Wix gratuito
 const corsOptions = {
   origin: 'https://nkmsistemas.wixsite.com',
-  methods: ['POST'],
+  methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
-  credentials: false
+  optionsSuccessStatus: 200
 };
 
-app.use(cors(corsOptions));
-app.use(express.json());
+app.use(cors(corsOptions));       // 🔒 Aplica CORS
+app.use(express.json());          // 📦 Permite leer JSON en el body
 
-// Ruta para guardar redondo
+// 📌 Ruta para guardar redondo
 app.post('/guardar-redondo', guardarRedondo);
 
+// 🚀 Inicia el servidor
 app.listen(PORT, () => {
   console.log(`✅ API de reservaciones redondo activa en el puerto ${PORT}`);
 });
