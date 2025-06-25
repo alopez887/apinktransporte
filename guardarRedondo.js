@@ -27,11 +27,11 @@ export default async function guardarRedondo(req, res) {
         precio_servicio, precio_total, zona, tipo_viaje
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7,
-        'Transportacion', $8, 1, $9, $10,
-        $11, $12, $13, $14, $15, $16,
-        $17, $18, $19, $20,
-        $21, $22,
-        $23, $24, $25, 'Redondo'
+        $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17, $18,
+        $19, $20, $21, $22,
+        $23, $24,
+        $25, $26, $27, $28
       )
     `;
 
@@ -43,7 +43,9 @@ export default async function guardarRedondo(req, res) {
       datos.correo_cliente,
       datos.telefono_cliente,
       datos.nota || '',
+      'Transportacion', // tipo_servicio
       datos.tipo_transporte || null,
+      1, // estatus
       datos.capacidad || null,
       datos.cantidad_pasajeros || null,
       datos.hotel_llegada || null,
@@ -60,7 +62,8 @@ export default async function guardarRedondo(req, res) {
       datos.porcentaje_descuento || null,
       datos.precio_servicio || null,
       datos.precio_total,
-      datos.zona || null
+      datos.zona || null,
+      'Redondo' // tipo_viaje
     ];
 
     await pool.query(query, valores);
