@@ -5,13 +5,19 @@ import guardarRedondo from './guardarRedondo.js';
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+const app = express(); // ✅ Declarar primero
 
-app.use(cors());
+const corsOptions = {
+  origin: 'https://nkmsistemas.wixsite.com', // Reemplaza con tu dominio final si lo cambias
+  methods: 'GET,POST',
+  allowedHeaders: 'Content-Type'
+};
+
+app.use(cors(corsOptions)); // ✅ Una sola vez
 app.use(express.json());
 
-// Ruta para guardar redondo
+const PORT = process.env.PORT || 4000;
+
 app.post('/guardar-redondo', guardarRedondo);
 
 app.listen(PORT, () => {
