@@ -1,87 +1,52 @@
 import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import guardarRedondo from './guardarRedondo.js';
-import pool from './conexion.js';
+import pool from './conexion.js'; // Importa la configuración de la base de datos
 
-dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = 3000;
 
-// ✅ CORS configurado para Wix y archivos HTML embebidos (iframe)
-const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      'https://nkmsistemas.wixsite.com',
-      'https://nkmsistemas-wixsite-com.filesusr.com'
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('❌ No autorizado por CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type']
-};
+app.use(express.json()); // Para manejar solicitudes JSON
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
-// ✅ Refuerzo manual para CORS (por si Railway cachea mal)
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowed = [
-    'https://nkmsistemas.wixsite.com',
-    'https://nkmsistemas-wixsite-com.filesusr.com'
-  ];
-  if (allowed.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-});
-
-app.use(express.json());
-
-// 🔹 Ruta para hoteles
-app.get('/hoteles', async (req, res) => {
+// Ruta para obtener hoteles
+app.get('/api/hoteles', async (req, res) => {
   try {
-    const resultado = await pool.query('SELECT nombre_hotel FROM hoteles_zona ORDER BY nombre_hotel');
-    res.json(resultado.rows);
+    const result = await pool.query('SELECT * FROM hoteles_zona'); // Suponiendo que tienes una tabla llamada "hoteles"
+    res.json(result.rows); // Devuelve los datos de los hoteles en formato JSON
   } catch (error) {
-    console.error('❌ Error al obtener hoteles:', error.message);
-    res.status(500).json({ error: 'Error al obtener hoteles' });
+    console.error('Error al obtener los hoteles:', error);
+    res.status(500).send('Error al obtener los hoteles');
   }
 });
 
-// 🔹 Ruta para obtener capacidades según tipo y zona
-app.get('/capacidades', async (req, res) => {
-  const { tipo, zona } = req.query;
-
-  if (!tipo || !zona) {
-    return res.status(400).json({ error: 'Faltan parámetros tipo y zona' });
-  }
-
+// Ruta para obtener aerolíneas
+app.get('/api/aerolineas', async (req, res) => {
   try {
-    const resultado = await pool.query(
-      'SELECT capacidad FROM tarifas_transportacion WHERE tipo_transporte = $1 AND zona = $2 ORDER BY capacidad',
-      [tipo, zona]
+    const result = await pool.query('SELECT * FROM aerolineas'); // Suponiendo que tienes una tabla llamada "aerolineas"
+    res.json(result.rows); // Devuelve las aerolíneas en formato JSON
+  } catch (error) {
+    console.error('Error al obtener las aerolíneas:', error);
+    res.status(500).send('Error al obtener las aerolíneas');
+  }
+});
+
+// Ruta para manejar el envío del formulario
+app.post('/api/reservar', async (req, res) => {
+  try {
+    const { nombre_cliente, correo_cliente, telefono_cliente, numero_pasajeros, tipo_viaje, fecha_llegada, hora_llegada } = req.body;
+
+    // Realizar una inserción en la base de datos (suponiendo que tienes una tabla llamada "reservas")
+    const result = await pool.query(
+      'INSERT INTO reservas (nombre_cliente, correo_cliente, telefono_cliente, numero_pasajeros, tipo_viaje, fecha_llegada, hora_llegada) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [nombre_cliente, correo_cliente, telefono_cliente, numero_pasajeros, tipo_viaje, fecha_llegada, hora_llegada]
     );
 
-    const capacidades = resultado.rows.map(row => row.capacidad);
-    res.json(capacidades);
+    res.status(200).json({ message: 'Reservación realizada correctamente', reserva: result.rows[0] });
   } catch (error) {
-    console.error('❌ Error al obtener capacidades:', error.message);
-    res.status(500).json({ error: 'Error interno al obtener capacidades' });
+    console.error('Error al procesar la reservación:', error);
+    res.status(500).send('Error al procesar la reservación');
   }
 });
 
-// 🔹 Ruta para guardar redondo
-app.post('/guardar-redondo', guardarRedondo);
-
-// 🔹 Iniciar servidor
+// Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`✅ API de reservaciones redondo activa en el puerto ${PORT}`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
